@@ -1,44 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <title> Tech Projet Protection_phishing</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>AntiPhish — Protection Phishing</title>
 </head>
 
 <body>
+  <header class="app-header" role="banner">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">🛡️</div>
+      <div class="titles">
+        <h1 id="appTitle">AntiPhish</h1>
+        <p id="appTagline" class="subtitle">Vérifiez les liens et fichiers, apprenez à éviter le phishing</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <label for="langSelect" class="sr-only">Langue</label>
+      <select id="langSelect" aria-label="Langue">
+        <option value="fr" selected>Français</option>
+        <option value="ewe">Eʋegbe</option>
+      </select>
+    </div>
+  </header>
 
-        <div class="container">
-            <h1> AntiPhish</h1>
+  <main class="container" role="main">
+    <section class="card" aria-labelledby="scanUrlTitle">
+      <h2 id="scanUrlTitle" data-i18n="scan_url_title">Scanner une URL</h2>
+      <label for="urlInput" class="label" data-i18n="url_label">Entrez une URL (ex: https://example.com)</label>
+      <input type="text" id="urlInput" inputmode="url" placeholder="https://example.com" aria-describedby="urlHelp">
+      <p id="urlHelp" class="help" data-i18n="url_help">Collez le lien suspect pour vérifier sa sécurité.</p>
+      <button id="scanUrlBtn" onclick="scanURL()" data-i18n="scan_url_btn">Scanner l’URL</button>
+    </section>
 
-            <section>
-                <h2>Scan a URL</h2>
-                <input type="text" id="urlInput"
-                placeholder="Enter URL (e.g., https://example.com)">
-                <button onclick="scanURL()">Scan a URL</button>
-            </section>
+    <section class="card" aria-labelledby="scanFileTitle">
+      <h2 id="scanFileTitle" data-i18n="scan_file_title">Scanner un fichier</h2>
+      <label for="fileInput" class="label" data-i18n="file_label">Choisissez un fichier (max 32 Mo)</label>
+      <input type="file" id="fileInput" aria-describedby="fileHelp">
+      <p id="fileHelp" class="help" data-i18n="file_help">Téléversez un fichier pour détection de menaces.</p>
+      <button id="scanFileBtn" onclick="scanFile()" data-i18n="scan_file_btn">Scanner le fichier</button>
+    </section>
 
-            <section>
-                <h2>Scan a File</h2>
-                <input type="file" id="fileInput">
-                <button onclick="scanFILE()">Scan File</button>
-            </section>
+    <section class="card info" aria-labelledby="learnTitle">
+      <h2 id="learnTitle" data-i18n="learn_title">Comprendre le phishing</h2>
+      <ul class="learn-list">
+        <li data-i18n="learn_tip1">Vérifiez l’adresse de l’expéditeur et l’URL avant de cliquer.</li>
+        <li data-i18n="learn_tip2">Méfiez-vous des urgences et promesses trop belles.</li>
+        <li data-i18n="learn_tip3">Ne partagez jamais vos codes ou OTP par message/appel.</li>
+        <li data-i18n="learn_tip4">Utilisez ce scanner pour vérifier les liens et fichiers suspects.</li>
+      </ul>
+    </section>
 
-            <div id="result"></div>
+    <div id="result" role="region" aria-live="polite"></div>
 
-            <div id="fullReportModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" onclick="closeModal()">&times;</span>
-                    <h2>Full Report </h2>
-                    <div id="fullReportContent"></div>
-                </div>
-            </div>
-        </div>
-    
+    <div id="fullReportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="fullReportTitle">
+      <div class="modal-content">
+        <button class="close" aria-label="Fermer" onclick="closeModal()">&times;</button>
+        <h2 id="fullReportTitle" data-i18n="full_report_title">Rapport détaillé</h2>
+        <div id="fullReportContent"></div>
+      </div>
+    </div>
+  </main>
 
+  <!-- Chatbot floating widget -->
+  <div id="chatbot" class="chatbot" aria-live="polite">
+    <button id="chatbotToggle" class="chatbot-toggle" aria-expanded="false" aria-controls="chatbotPanel">💬</button>
+    <div id="chatbotPanel" class="chatbot-panel" role="dialog" aria-modal="false" aria-labelledby="chatbotTitle">
+      <div class="chatbot-header">
+        <h3 id="chatbotTitle" data-i18n="chatbot_title">Assistant AntiPhish</h3>
+        <button class="close" aria-label="Fermer" onclick="toggleChatbot(false)">&times;</button>
+      </div>
+      <div id="chatbotMessages" class="chatbot-messages" aria-live="polite"></div>
+      <form id="chatbotForm" class="chatbot-input" onsubmit="return sendChatbotMessage(event)">
+        <label for="chatbotText" class="sr-only" data-i18n="chatbot_input_label">Votre message</label>
+        <input id="chatbotText" type="text" autocomplete="off" placeholder="Posez votre question…" />
+        <button type="submit" data-i18n="chatbot_send">Envoyer</button>
+      </form>
+    </div>
+  </div>
 
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
-
 </html>
