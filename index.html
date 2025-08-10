@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
   <title>AntiPhish — Protection Phishing</title>
 </head>
 
-<body>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-sky-50">
   <header class="app-header" role="banner">
     <div class="brand">
       <div class="logo" aria-hidden="true">🛡️</div>
@@ -65,17 +66,17 @@
 
   <!-- Chatbot floating widget -->
   <div id="chatbot" class="chatbot" aria-live="polite">
-    <button id="chatbotToggle" class="chatbot-toggle" aria-expanded="false" aria-controls="chatbotPanel">💬</button>
+    <button id="chatbotToggle" class="chatbot-toggle bg-indigo-600 hover:bg-indigo-500 text-white" aria-expanded="false" aria-controls="chatbotPanel">💬</button>
     <div id="chatbotPanel" class="chatbot-panel" role="dialog" aria-modal="false" aria-labelledby="chatbotTitle">
-      <div class="chatbot-header">
-        <h3 id="chatbotTitle" data-i18n="chatbot_title">Assistant AntiPhish</h3>
+      <div class="chatbot-header bg-gradient-to-r from-indigo-600 to-sky-500 text-white">
+        <h3 id="chatbotTitle" data-i18n="chatbot_title" class="font-semibold">Assistant AntiPhish</h3>
         <button class="close" aria-label="Fermer" onclick="toggleChatbot(false)">&times;</button>
       </div>
-      <div id="chatbotMessages" class="chatbot-messages" aria-live="polite"></div>
+      <div id="chatbotMessages" class="chatbot-messages bg-slate-50"></div>
       <form id="chatbotForm" class="chatbot-input" onsubmit="return sendChatbotMessage(event)">
         <label for="chatbotText" class="sr-only" data-i18n="chatbot_input_label">Votre message</label>
-        <input id="chatbotText" type="text" autocomplete="off" placeholder="Posez votre question…" />
-        <button type="submit" data-i18n="chatbot_send">Envoyer</button>
+        <input id="chatbotText" type="text" autocomplete="off" placeholder="Posez votre question…" class="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-indigo-300" />
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-md" data-i18n="chatbot_send">Envoyer</button>
       </form>
     </div>
   </div>
