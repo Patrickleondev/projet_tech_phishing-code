@@ -1,6 +1,96 @@
 // L'api de virus Total
 const API_KEY = "f9ad386ec18ff661a32903cd2aa49c52752ed7625257bf15d8f4873bdace4cf7";
 
+// Simple i18n dictionary (FR and Eʋe)
+const I18N = {
+  fr: {
+    scan_url_title: "Scanner une URL",
+    url_label: "Entrez une URL (ex: https://example.com)",
+    url_help: "Collez le lien suspect pour vérifier sa sécurité.",
+    scan_url_btn: "Scanner l’URL",
+    scan_file_title: "Scanner un fichier",
+    file_label: "Choisissez un fichier (max 32 Mo)",
+    file_help: "Téléversez un fichier pour détection de menaces.",
+    scan_file_btn: "Scanner le fichier",
+    learn_title: "Comprendre le phishing",
+    chatbot_title: "Assistant AntiPhish",
+    chatbot_input_label: "Votre message",
+    chatbot_send: "Envoyer",
+    full_report_title: "Rapport détaillé",
+    msg_enter_url: "Veuillez entrer une URL !",
+    msg_valid_url: "Veuillez entrer une URL valide (ex: https://example.com)",
+    msg_submitting_url: "Envoi de l’URL pour analyse…",
+    msg_getting_results: "Récupération des résultats…",
+    msg_select_file: "Veuillez sélectionner un fichier !",
+    msg_file_too_big: "La taille ne doit pas dépasser 32 Mo",
+    msg_uploading_file: "Téléversement du fichier…",
+    msg_analyzing: (name, secs) => `Analyse de ${name || 'l’URL'}… (${secs}s restantes)`,
+    msg_analysis_failed: "Analyse échouée",
+    msg_analysis_timeout: "Délai dépassé — veuillez réessayer",
+    msg_invalid_response: "Réponse invalide",
+    scan_report: "Rapport d’analyse",
+    verdict: "Verdict",
+    detection_rate: (pct) => `${pct}% de détection`,
+    view_full_report: "Voir le rapport détaillé",
+    no_details: "Pas de détails disponibles",
+    malicious: "Malveillant",
+    suspicious: "Suspect",
+    harmless: "Sain",
+    undetected: "Non détecté",
+  },
+  ewe: {
+    scan_url_title: "Fàƒlia ɖe URL",
+    url_label: "Ɖe URL aɖe (ex: https://example.com)",
+    url_help: "Tɔ ɖe wòdiŋkope ƒe link la tso gbɔ ɖe ŋkɔe ŋu le eme.",
+    scan_url_btn: "Fàƒlia URL la",
+    scan_file_title: "Fàƒlia ɖe ƒaɛl",
+    file_label: "Tia ƒaɛl aɖe (max 32 Mo)",
+    file_help: "Tia ƒaɛl la kɔ ɖe agbagba ƒe nyawo ŋu le eme.",
+    scan_file_btn: "Fàƒlia ƒaɛl la",
+    learn_title: "Lé phishing ɖoɖo",
+    chatbot_title: "AntiPhish ƒe ƒeɖekɔnu",
+    chatbot_input_label: "Wò biabia",
+    chatbot_send: "Gblɔna",
+    full_report_title: "Nyatakakɛkpui dziɖuɖu",
+    msg_enter_url: "Ta Ɖe URL aɖe!",
+    msg_valid_url: "Ɖe URL si le xexea me (ex: https://example.com)",
+    msg_submitting_url: "Medzea URL la leɖeɖeɖe…",
+    msg_getting_results: "Medze anye ƒe ɖoɖo…",
+    msg_select_file: "Tia ƒaɛl aɖe!",
+    msg_file_too_big: "Ƒeƒe la mena 32 Mo dzi",
+    msg_uploading_file: "Mekɔ ƒaɛl la ɖe dzi…",
+    msg_analyzing: (name, secs) => `Medze ${name || 'URL'} la ƒe nyawo ɖo… (${secs}s hã ƒe ɖoɖo)`,
+    msg_analysis_failed: "Dziɖuɖu la meɖe asi",
+    msg_analysis_timeout: "Xɔse ƒe ɣa ɖe dzi — na ɖoɖo ɖe eme aɖe",
+    msg_invalid_response: "Nya meɖe asi",
+    scan_report: "Dziɖuɖu ƒe akɔnta",
+    verdict: "Akpɔ",
+    detection_rate: (pct) => `${pct}% ƒe kpɔɖeŋu`,
+    view_full_report: "Dze nyatakakɛkpui ɖe eme",
+    no_details: "Nya bubu meli ɖe eme o",
+    malicious: "Mɔnuŋlɔla",
+    suspicious: "Aƒeɖe-ɖeŋu",
+    harmless: "Fɔfɔ",
+    undetected: "Mekpɔ o",
+  }
+};
+
+let currentLang = 'fr';
+const getText = (key, ...args) => {
+  const entry = I18N[currentLang][key];
+  return typeof entry === 'function' ? entry(...args) : (entry || key);
+};
+
+// Apply i18n to elements with data-i18n
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (!key) return;
+    const text = getText(key);
+    if (text) el.textContent = text;
+  });
+}
+
 // Fonctions pour obtenir le DOM par l'ID
 const getElement = id => document.getElementById(id);
 
@@ -56,16 +146,16 @@ async function makeRequest(url, options) {
 //Proccessus de scanning avec virus total
 async function scanURL() {
     const url = getElement('urlInput').value.trim();
-    if (!url) return showError("Please enter a URL!");
+    if (!url) return showError(getText('msg_enter_url'));
 
     try{
         new URL(url);//Valid URL format
     }catch{
-        return showError("Please enter a valid URL (e.g., https://example.com)");
+        return showError(getText('msg_valid_url'));
     }
     
     try{
-        showLoading("Submitting URL for scanning ...")
+        showLoading(getText('msg_submitting_url'));
 
         const encodedUrL = encodeURIComponent(url);
         
@@ -86,7 +176,7 @@ async function scanURL() {
     //Delaie avant les resultats
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    showLoading("Getting scan results...");
+    showLoading(getText('msg_getting_results'));
     await pollAnalysisResults(submitResult.data.id);
     }catch (error){
         showError(`Error: ${error.message}`);
@@ -96,11 +186,11 @@ async function scanURL() {
 //Handle le processus de scanning des fichiers
 async function scanFile() {
     const file = getElement('fileInput').files[0];
-    if(!file) return showError("Please select a file!");
-    if (file.size > 32*1024*1024) return showError("La taille ne doit pas depasser 32MB");
+    if(!file) return showError(getText('msg_select_file'));
+    if (file.size > 32*1024*1024) return showError(getText('msg_file_too_big'));
 
     try{
-        showLoading("Updating file...");
+        showLoading(getText('msg_uploading_file'));
 
         const formData = new FormData();
         formData.append("file", file);
@@ -118,7 +208,7 @@ async function scanFile() {
         //Delai avant le resultat
         await new Promise(resolve => setTimeout(resolve, 3000));
 
-        showLoading("Getting scan results...");
+        showLoading(getText('msg_getting_results'));
         const analysis = await makeRequest(`https://www.virustotal.com/api/v3/analyses/${uploadResult.data.id}`);
         
         if(!analysis.data?.id){
@@ -139,12 +229,12 @@ async function pollAnalysisResults(analysisId, fileName = '') {
 
     while(attempts < maxAttempts) {
         try{
-           showLoading(`Analyzing ${fileName ? fileName : 'URL'}... (${((maxAttempts - attempts) * interval / 1000).toFixed(0)}s remaining)`);
+           showLoading(getText('msg_analyzing')(fileName, ((maxAttempts - attempts) * interval / 1000).toFixed(0)));
 
             const report = await makeRequest(`https://www.virustotal.com/api/v3/analyses/${analysisId}`);
             const status = report.data?.attributes?.status;
 
-            if(!status) throw new Error("Invalid analysis response!");
+            if(!status) throw new Error(getText('msg_invalid_response'));
 
             if(status === "completed"){
                 showFormattedResult(report);
@@ -152,11 +242,11 @@ async function pollAnalysisResults(analysisId, fileName = '') {
             }
 
              if(status === "failed"){
-                throw new Error("Analysis failed");
+                throw new Error(getText('msg_analysis_failed'));
             }
 
             if(++attempts >= maxAttempts){
-                throw new Error("Analysis timeout - please try again!");
+                throw new Error(getText('msg_analysis_timeout'));
             }
 
             //Increase interval between retries
@@ -171,41 +261,40 @@ async function pollAnalysisResults(analysisId, fileName = '') {
 
 //Formats and displays analysis results in the UI
 function showFormattedResult(data) {
-    if (!data?.data?.attributes?.stats) return showError("Invalid response format");
+    if (!data?.data?.attributes?.stats) return showError(getText('msg_invalid_response'));
 
     const stats = data.data.attributes.stats;
     const total = Object.values(stats).reduce((sum, val) => sum + val, 0);
-    if (!total) return showError("No analysis results available!");
+    if (!total) return showError(getText('msg_invalid_response'));
 
     const getPercent = val => ((val / total) * 100).toFixed(1);
 
     const categories = {
-        malicious: { color: 'malicious', label: 'Malicious' },
-        suspicious: { color: 'suspicious', label: 'Suspicious' },
-        harmless: { color: 'safe', label: 'Clean' },
-        undetected: { color: 'undetected', label: 'Undetected' }
+        malicious: { color: 'malicious', label: getText('malicious') },
+        suspicious: { color: 'suspicious', label: getText('suspicious') },
+        harmless: { color: 'safe', label: getText('harmless') },
+        undetected: { color: 'undetected', label: getText('undetected') }
     };
 
-    // Correction: utilisation de 'key' au lieu de 'keys'
     const percents = Object.keys(categories).reduce((acc, key) => {
         acc[key] = getPercent(stats[key]);
         return acc;
     }, {});
 
-    const verdict = stats.malicious > 0 ? "Malicious" : 
-                   stats.suspicious > 0 ? "Suspicious" : "Safe";
+    const verdict = stats.malicious > 0 ? getText('malicious') : 
+                   stats.suspicious > 0 ? getText('suspicious') : getText('harmless');
                    
     const verdictClass = stats.malicious > 0 ? "malicious" : 
                         stats.suspicious > 0 ? "suspicious" : "safe";
 
     updateResult(`
-        <h3>Scan Report</h3>
+        <h3>${getText('scan_report')}</h3>
         <div class="scan-stats">
-            <p><strong>Verdict:</strong> <span class="${verdictClass}">${verdict}</span></p>
-            <div class="progres-section">
+            <p><strong>${getText('verdict')}:</strong> <span class="${verdictClass}">${verdict}</span></p>
+            <div class="progress-section">
                 <div class="progress-label">
                     <span>Detection Result</span>
-                    <span class="progress-percent">${percents.malicious}% Detection Rate</span>
+                    <span class="progress-percent">${getText('detection_rate')(percents.malicious)}</span>
                 </div>
                 <div class="progress-stacked"> 
                     ${Object.entries(categories).map(([key, { color }]) => `
@@ -232,7 +321,7 @@ function showFormattedResult(data) {
                     </div>        
                 `).join('')}
             </div>
-            <button onclick="showFullReport(this.getAttribute('data-report'))" data-report='${JSON.stringify(data)}'>View Full Report</button>
+            <button onclick="showFullReport(this.getAttribute('data-report'))" data-report='${JSON.stringify(data)}'>${getText('view_full_report')}</button>
     `);
 
     setTimeout(() => {
@@ -248,7 +337,7 @@ function showFullReport(reportData){
     const results = data.data?.attributes?.results || {};
 
     getElement("fullReportContent").innerHTML = `
-        <h3>Full Report details </h3>
+        <h3>${getText('full_report_title')}</h3>
         ${results ?`
         <table>
             <tr><th>Engine</th><th>Result</th></tr>
@@ -259,7 +348,7 @@ function showFullReport(reportData){
                 </tr>    
             `).join('')}
         </table>
-        ` : '<p>No detailed results available!</p>'}
+        ` : `<p>${getText('no_details')}</p>`}
     `;
 
     modal.style.display = "block";
@@ -274,8 +363,89 @@ const closeModal = () => {
         setTimeout(() => modal.style.display = "none", 300);
 }
 
-//Close modal on outside click
+// Chatbot logic (local, rule-based QA FR/Eʋe)
+const CHATBOT_QA = {
+  fr: [
+    { q: /phishing|hameçonnage/i, a: "Le phishing est une arnaque où l’on vous pousse à cliquer ou à donner des infos. Vérifiez toujours l’expéditeur et l’URL, ne partagez jamais vos codes et scannez les liens ici." },
+    { q: /comment.*reconnaitre|identifier/i, a: "Signes: fautes, urgence, promesse trop belle, adresse e‑mail suspecte, URL non sécurisée. Passez la souris sur le lien pour voir la vraie adresse." },
+    { q: /otp|code|mot de passe/i, a: "Ne partagez jamais vos OTP ou mots de passe, même si ‘la banque’ vous appelle. Aucune banque sérieuse ne demande cela." },
+    { q: /que faire|piégé|compromis/i, a: "Changez vos mots de passe, activez 2FA, contactez votre banque, signalez l’e‑mail, et surveillez vos comptes." },
+  ],
+  ewe: [
+    { q: /phishing|hameçonnage|ɖeŋu/i, a: "Phishing nye azɔɖe siwo le wɔm be wòatsɔa nɔvi ɖe wò kple wò nya gbɔ. Kpɔ ɖeŋu le e-mail kple link ƒe ŋkɔwo me; menye ɖe OTP alo password nɛ mɔ gblɔ o." },
+    { q: /yɛ.*kpɔ|kɔnu|Ɖeŋu/i, a: "Womekpɔ ɖeŋuwo: ʋuʋuwo, susu gbe be deka nu yaka, e-mail ƒe ɖoɖo si melɔ̃ o, link si mekpɔa le xexea me. Tɔ link la ɖe eme kplii kpɔ eƒe ŋkɔ." },
+    { q: /otp|kod|password/i, a: "Menye OTP alo password nɛ mɔ gblɔ o, bank aɖeke megaƒo be naɖo wo la o." },
+    { q: /nye wò nanye|mieƒoɖe|mieɖe asi/i, a: "Trɔ wò passwordwo, tsi 2FA, kɔ bank gbɔ, nàɖo ɖo le e-mail la ŋu, eye nàkpɔ wò akɔntawo ɖe ɣe." },
+  ]
+};
+
+function toggleChatbot(forceOpen) {
+  const root = document.getElementById('chatbot');
+  const toggle = document.getElementById('chatbotToggle');
+  const isOpen = forceOpen !== undefined ? forceOpen : !root.classList.contains('open');
+  if (isOpen) {
+    root.classList.add('open');
+    toggle.setAttribute('aria-expanded', 'true');
+  } else {
+    root.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+  return false;
+}
+
+function appendChatbotMessage(text, who = 'bot') {
+  const list = document.getElementById('chatbotMessages');
+  const div = document.createElement('div');
+  div.className = `chatbot-msg ${who}`;
+  div.textContent = text;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+function findBotAnswer(text) {
+  const rules = CHATBOT_QA[currentLang] || [];
+  for (const { q, a } of rules) {
+    if (q.test(text)) return a;
+  }
+  return currentLang === 'fr'
+    ? "Je peux vous aider sur: reconnaître le phishing, que faire si vous êtes piégé, OTP/mots de passe, liens suspects. Posez votre question."
+    : "Metsɔa be maƒo wò ŋu le: phishing ƒe akpɔ, nu si nàyɛe ne wòva ɖe eme, OTP/password, kɔlink si le ɖeŋu. Bia biabia aɖe.";
+}
+
+function sendChatbotMessage(e) {
+  e.preventDefault();
+  const input = document.getElementById('chatbotText');
+  const text = input.value.trim();
+  if (!text) return false;
+  appendChatbotMessage(text, 'user');
+  input.value = '';
+  setTimeout(() => appendChatbotMessage(findBotAnswer(text), 'bot'), 200);
+  return false;
+}
+
+// Language switching
+function setLanguage(lang) {
+  currentLang = I18N[lang] ? lang : 'fr';
+  applyI18n();
+}
+
+//Close modal on outside click and init
 window.addEventListener('load', () => {
     const modal = getElement("fullReportModal");
     window.addEventListener('click', e => e.target === modal && closeModal());
+
+    // i18n init
+    const langSelect = document.getElementById('langSelect');
+    if (langSelect) {
+      langSelect.value = currentLang;
+      langSelect.addEventListener('change', e => setLanguage(e.target.value));
+    }
+    applyI18n();
+
+    // chatbot init
+    const toggleBtn = document.getElementById('chatbotToggle');
+    if (toggleBtn) toggleBtn.addEventListener('click', () => toggleChatbot());
+    appendChatbotMessage(currentLang === 'fr'
+      ? 'Bonjour! Posez vos questions sur le phishing (FR/Eʋe).'
+      : 'Woezɔ! Bia wò biabiawo ɖe phishing me (FR/Eʋe).', 'bot');
 });
