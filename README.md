@@ -19,3 +19,8 @@ Front-end simple et accessible pour scanner des URL et fichiers via l’API Viru
 
 ## Crédit
 Travail initial par l’équipe. Refonte UI/UX et multilingue ajoutés pour hackathon.
+
+## Chatbot (OpenRouter)
+- Définir la clé dans `.env` sous `OPENROUTER_API_KEY` (déjà configurée).
+- Lancer le serveur: `npm run start` puis ouvrir `index.html` avec Live Server ou un serveur statique.
+- Le widget chat appelle `POST /api/chat` (port 3001 par défaut) et stream la réponse.

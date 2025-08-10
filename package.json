@@ -1,0 +1,29 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "Front-end simple et accessible pour scanner des URL et fichiers via l’API VirusTotal, avec interface multilingue (Français/Eʋe) et un chatbot local d’aide sur le phishing.",
+  "type": "module",
+  "main": "script.js",
+  "scripts": {
+    "dev": "node --watch server/index.js",
+    "start": "node server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Patrickleondev/projet_tech_phishing-code.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Patrickleondev/projet_tech_phishing-code/issues"
+  },
+  "homepage": "https://github.com/Patrickleondev/projet_tech_phishing-code#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2"
+  }
+}

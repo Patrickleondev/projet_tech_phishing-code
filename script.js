@@ -363,21 +363,81 @@ const closeModal = () => {
         setTimeout(() => modal.style.display = "none", 300);
 }
 
-// Chatbot logic (local, rule-based QA FR/Eʋe)
-const CHATBOT_QA = {
-  fr: [
-    { q: /phishing|hameçonnage/i, a: "Le phishing est une arnaque où l’on vous pousse à cliquer ou à donner des infos. Vérifiez toujours l’expéditeur et l’URL, ne partagez jamais vos codes et scannez les liens ici." },
-    { q: /comment.*reconnaitre|identifier/i, a: "Signes: fautes, urgence, promesse trop belle, adresse e‑mail suspecte, URL non sécurisée. Passez la souris sur le lien pour voir la vraie adresse." },
-    { q: /otp|code|mot de passe/i, a: "Ne partagez jamais vos OTP ou mots de passe, même si ‘la banque’ vous appelle. Aucune banque sérieuse ne demande cela." },
-    { q: /que faire|piégé|compromis/i, a: "Changez vos mots de passe, activez 2FA, contactez votre banque, signalez l’e‑mail, et surveillez vos comptes." },
-  ],
-  ewe: [
-    { q: /phishing|hameçonnage|ɖeŋu/i, a: "Phishing nye azɔɖe siwo le wɔm be wòatsɔa nɔvi ɖe wò kple wò nya gbɔ. Kpɔ ɖeŋu le e-mail kple link ƒe ŋkɔwo me; menye ɖe OTP alo password nɛ mɔ gblɔ o." },
-    { q: /yɛ.*kpɔ|kɔnu|Ɖeŋu/i, a: "Womekpɔ ɖeŋuwo: ʋuʋuwo, susu gbe be deka nu yaka, e-mail ƒe ɖoɖo si melɔ̃ o, link si mekpɔa le xexea me. Tɔ link la ɖe eme kplii kpɔ eƒe ŋkɔ." },
-    { q: /otp|kod|password/i, a: "Menye OTP alo password nɛ mɔ gblɔ o, bank aɖeke megaƒo be naɖo wo la o." },
-    { q: /nye wò nanye|mieƒoɖe|mieɖe asi/i, a: "Trɔ wò passwordwo, tsi 2FA, kɔ bank gbɔ, nàɖo ɖo le e-mail la ŋu, eye nàkpɔ wò akɔntawo ɖe ɣe." },
-  ]
-};
+// Chatbot logic (OpenRouter via backend)
+async function streamChatbotResponse(userText) {
+  const controller = new AbortController();
+  const messages = [
+    { role: 'system', content: 'Tu es un assistant sécurité qui répond en Français et Eʋe de manière brève et claire, spécialisé en anti‑phishing. Donne des étapes actionnables.' },
+    { role: 'user', content: userText }
+  ];
+  const apiBase = `http://${window.location.hostname || 'localhost'}:3001`;
+  const response = await fetch(`${apiBase}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, model: 'openai/gpt-4o-mini' }),
+    signal: controller.signal
+  });
+  if (!response.ok) throw new Error('Chat error');
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split('\n\n');
+    buffer = parts.pop() || '';
+    for (const part of parts) {
+      if (!part.startsWith('data:')) continue;
+      const payload = part.replace(/^data:\s*/, '').trim();
+      if (payload === '[DONE]') return;
+      try {
+        const json = JSON.parse(payload);
+        const delta = json.choices?.[0]?.delta?.content || json.choices?.[0]?.message?.content || '';
+        if (delta) appendChatbotDelta(delta);
+      } catch (_) { /* ignore */ }
+    }
+  }
+}
+
+let currentBotBubble = null;
+function appendChatbotDelta(text) {
+  if (!currentBotBubble) {
+    currentBotBubble = document.createElement('div');
+    currentBotBubble.className = 'chatbot-msg bot';
+    currentBotBubble.textContent = '';
+    const list = document.getElementById('chatbotMessages');
+    list.appendChild(currentBotBubble);
+    list.scrollTop = list.scrollHeight;
+  }
+  currentBotBubble.textContent += text;
+}
+
+function appendChatbotMessage(text, who = 'bot') {
+  const list = document.getElementById('chatbotMessages');
+  const div = document.createElement('div');
+  div.className = `chatbot-msg ${who}`;
+  div.textContent = text;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+function sendChatbotMessage(e) {
+  e.preventDefault();
+  const input = document.getElementById('chatbotText');
+  const text = input.value.trim();
+  if (!text) return false;
+  appendChatbotMessage(text, 'user');
+  input.value = '';
+  currentBotBubble = null;
+  streamChatbotResponse(text).catch(err => {
+    appendChatbotMessage('Erreur côté assistant. Réessayez.', 'bot');
+    console.error(err);
+  });
+  return false;
+}
 
 function toggleChatbot(forceOpen) {
   const root = document.getElementById('chatbot');
@@ -390,36 +450,6 @@ function toggleChatbot(forceOpen) {
     root.classList.remove('open');
     toggle.setAttribute('aria-expanded', 'false');
   }
-  return false;
-}
-
-function appendChatbotMessage(text, who = 'bot') {
-  const list = document.getElementById('chatbotMessages');
-  const div = document.createElement('div');
-  div.className = `chatbot-msg ${who}`;
-  div.textContent = text;
-  list.appendChild(div);
-  list.scrollTop = list.scrollHeight;
-}
-
-function findBotAnswer(text) {
-  const rules = CHATBOT_QA[currentLang] || [];
-  for (const { q, a } of rules) {
-    if (q.test(text)) return a;
-  }
-  return currentLang === 'fr'
-    ? "Je peux vous aider sur: reconnaître le phishing, que faire si vous êtes piégé, OTP/mots de passe, liens suspects. Posez votre question."
-    : "Metsɔa be maƒo wò ŋu le: phishing ƒe akpɔ, nu si nàyɛe ne wòva ɖe eme, OTP/password, kɔlink si le ɖeŋu. Bia biabia aɖe.";
-}
-
-function sendChatbotMessage(e) {
-  e.preventDefault();
-  const input = document.getElementById('chatbotText');
-  const text = input.value.trim();
-  if (!text) return false;
-  appendChatbotMessage(text, 'user');
-  input.value = '';
-  setTimeout(() => appendChatbotMessage(findBotAnswer(text), 'bot'), 200);
   return false;
 }
 
