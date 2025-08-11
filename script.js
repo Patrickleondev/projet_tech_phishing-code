@@ -370,8 +370,7 @@ async function streamChatbotResponse(userText) {
     { role: 'system', content: 'Tu es un assistant sécurité qui répond en Français et Eʋe de manière brève et claire, spécialisé en anti‑phishing. Donne des étapes actionnables.' },
     { role: 'user', content: userText }
   ];
-  const apiBase = `http://${window.location.hostname || 'localhost'}:3001`;
-  const response = await fetch(`${apiBase}/api/chat`, {
+  const response = await fetch(`/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages, model: 'openai/gpt-4o-mini' }),
